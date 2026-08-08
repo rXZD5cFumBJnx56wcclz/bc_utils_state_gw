@@ -5,32 +5,45 @@ use bc_utils_lg::{
         signals::Signal,
         trade::TradeState,
     },
-    types::maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
+    types::maps::{MAP, PACK},
 };
 use bc_utils_state::main_trait::UtilState;
 
+pub type UtilsState<'a> = MAP<&'a str, Box<dyn UtilState>>;
+
+pub trait UtilsStateExt<'a> {
+    fn new(s: &'a SETTINGS_UTILS_STATE, fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>)
+    -> Self;
+}
+
+impl<'a> UtilsStateExt<'a> for UtilsState<'a> {
+    fn new(
+        s: &'a SETTINGS_UTILS_STATE,
+        fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
+    ) -> Self {
+        get_map(s, fa)
+    }
+}
+
+#[derive(Default)]
 pub struct UtilsStateGateway<'a> {
-    pub utils_state: *const MAP<&'a str, Box<dyn UtilState>>,
-    pub s: &'a SETTINGS_UTILS_STATE,
+    pub utils_state: *const UtilsState<'a>,
+    s: *const SETTINGS_UTILS_STATE,
 }
 
 pub fn get_map<'a>(
     s: &'a SETTINGS_UTILS_STATE,
-    fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
+    fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
 ) -> MAP<&'a str, Box<dyn UtilState>> {
     s.iter()
         .map(|(k, v)| (k.as_str(), fa[v.key.as_str()](v)))
         .collect()
 }
 
-fn get_src(
-    s: &SETTINGS_UTIL_STATE,
-    buffer: &[Vec<f64>],
-    indications: &MAP<&str, f64>,
-) -> Vec<f64> {
+fn get_src(s: &SETTINGS_UTIL_STATE, buffer: &[Vec<f64>], indications: &MAP<&str, f64>) -> Vec<f64> {
     let mut res = Vec::with_capacity(s.used_ind.len() + s.used_src.len());
     for used_src in &s.used_src {
-        res.push(buffer[buffer.len() - 1 - used_src.sub_from_last_i][used_src.index]);
+        res.push(buffer[used_src.index][buffer.len() - 1 - used_src.sub_from_last_i]);
     }
     for used_ind in &s.used_ind {
         res.push(indications[used_ind.as_str()]);
@@ -44,7 +57,7 @@ fn get_src(
 impl<'a> UtilsStateGateway<'a> {
     pub fn new(
         utils_state: *const MAP<&'a str, Box<dyn UtilState>>,
-        s: &'a SETTINGS_UTILS_STATE,
+        s: *const SETTINGS_UTILS_STATE,
     ) -> Self {
         Self { utils_state, s }
     }
@@ -58,7 +71,7 @@ impl<'a> UtilsStateGateway<'a> {
         indications: &MAP<&str, f64>,
         signals: &MAP<&str, Signal>,
     ) -> MAP<&'a str, f64> {
-        self.s
+        unsafe { &*self.s }
             .iter()
             .map(|(k, setting)| {
                 (
@@ -82,7 +95,7 @@ impl<'a> UtilsStateGateway<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bc_pack_utils_state::FUNCS_EXTRACT_ARGS;
+    use bc_packs::PACK_UTIL;
     use pretty_assertions::assert_eq as assert_eq_pr;
 
     #[test]
@@ -98,10 +111,10 @@ mod tests {
                 ..Default::default()
             },
         )]);
-        let map = get_map(&s, &FUNCS_EXTRACT_ARGS);
+        let map = get_map(&s, &PACK_UTIL);
         assert_eq_pr!(
             UtilsStateGateway::new(&map, &s).series(
-                &TradeState::new(100., Default::default(), Default::default()),
+                &TradeState::new(100.,),
                 &[],
                 &Default::default(),
                 &Default::default(),

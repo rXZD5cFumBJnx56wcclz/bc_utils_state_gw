@@ -11,4 +11,4 @@ bc_utils_state = {path = "../bc_utils_state"}
 [dev-dependencies]
 pretty_assertions = "1"
 criterion = {version = "0.8", features = ["html_reports"]}
-bc_pack_utils_state = {path="../../../bc_pack_utils_state"}
+bc_packs = {path = "../bc_packs"}
