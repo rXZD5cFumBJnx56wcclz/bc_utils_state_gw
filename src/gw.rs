@@ -9,28 +9,6 @@ use bc_utils_lg::{
 };
 use bc_utils_state::main_trait::UtilState;
 
-pub type UtilsState<'a> = MAP<&'a str, Box<dyn UtilState>>;
-
-pub trait UtilsStateExt<'a> {
-    fn new(s: &'a SETTINGS_UTILS_STATE, fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>)
-    -> Self;
-}
-
-impl<'a> UtilsStateExt<'a> for UtilsState<'a> {
-    fn new(
-        s: &'a SETTINGS_UTILS_STATE,
-        fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
-    ) -> Self {
-        get_map(s, fa)
-    }
-}
-
-#[derive(Default)]
-pub struct UtilsStateGateway<'a> {
-    pub utils_state: *const UtilsState<'a>,
-    s: *const SETTINGS_UTILS_STATE,
-}
-
 pub fn get_map<'a>(
     s: &'a SETTINGS_UTILS_STATE,
     fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
@@ -54,29 +32,32 @@ fn get_src(s: &SETTINGS_UTIL_STATE, buffer: &[Vec<f64>], indications: &MAP<&str,
     res
 }
 
-impl<'a> UtilsStateGateway<'a> {
+#[derive(Default)]
+pub struct UtilsState<'a>(pub MAP<&'a str, Box<dyn UtilState>>);
+
+impl<'a> UtilsState<'a> {
     pub fn new(
-        utils_state: *const MAP<&'a str, Box<dyn UtilState>>,
-        s: *const SETTINGS_UTILS_STATE,
+        s: &'a SETTINGS_UTILS_STATE,
+        fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
     ) -> Self {
-        Self { utils_state, s }
+        Self(get_map(s, fa))
     }
 }
 
-impl<'a> UtilsStateGateway<'a> {
+impl<'a> UtilsState<'a> {
     pub fn series(
         &self,
         state: &TradeState,
         buffer: &[Vec<f64>],
+        s: &'a SETTINGS_UTILS_STATE,
         indications: &MAP<&str, f64>,
         signals: &MAP<&str, Signal>,
     ) -> MAP<&'a str, f64> {
-        unsafe { &*self.s }
-            .iter()
+        s.iter()
             .map(|(k, setting)| {
                 (
                     k.as_str(),
-                    unsafe { &*self.utils_state }[k.as_str()].util(
+                    self.0[k.as_str()].util(
                         state,
                         &get_src(setting, buffer, indications),
                         setting
@@ -111,11 +92,11 @@ mod tests {
                 ..Default::default()
             },
         )]);
-        let map = get_map(&s, &PACK_UTIL);
         assert_eq_pr!(
-            UtilsStateGateway::new(&map, &s).series(
+            UtilsState::new(&s, &PACK_UTIL).series(
                 &TradeState::new(100.,),
                 &[],
+                &s,
                 &Default::default(),
                 &Default::default(),
             )["qty_1"],
