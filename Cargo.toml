@@ -1,6 +1,6 @@
 [package]
 name = "bc_utils_state_gw"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 
 [dependencies]
@@ -9,6 +9,6 @@ bc_utils = {path = "../bc_utils"}
 bc_utils_state = {path = "../bc_utils_state"}
 
 [dev-dependencies]
-pretty_assertions = "1"
+bc_test_kit = {path = "../bc_test_kit"}
 criterion = {version = "0.8", features = ["html_reports"]}
 bc_packs = {path = "../bc_packs"}

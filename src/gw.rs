@@ -36,11 +36,12 @@ fn get_src(s: &SETTINGS_UTIL_STATE, buffer: &[Vec<f64>], indications: &MAP<&str,
 pub struct UtilsState<'a>(pub MAP<&'a str, Box<dyn UtilState>>);
 
 impl<'a> UtilsState<'a> {
-    pub fn new(
+    pub fn init(
+        &mut self,
         s: &'a SETTINGS_UTILS_STATE,
         fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
-    ) -> Self {
-        Self(get_map(s, fa))
+    )  {
+        *self = Self(get_map(s, fa))
     }
 }
 
@@ -76,27 +77,18 @@ impl<'a> UtilsState<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bc_test_kit::prelude::*;
     use bc_packs::PACK_UTIL;
-    use pretty_assertions::assert_eq as assert_eq_pr;
 
     #[test]
     fn series_res_1() {
-        let s = MAP::from_iter([(
-            "qty_1".to_string(),
-            SETTINGS_UTIL_STATE {
-                key: "qty".to_string(),
-                kwargs_f64: MAP::from_iter([
-                    ("amount".to_string(), 1.),
-                    ("percent_of_capital".to_string(), 0.1),
-                ]),
-                ..Default::default()
-            },
-        )]);
+        let mut utils = UtilsState::default();
+        utils.init(&UTILS_STATE, &PACK_UTIL);
         assert_eq_pr!(
-            UtilsState::new(&s, &PACK_UTIL).series(
+            utils.series(
                 &TradeState::new(100.,),
                 &[],
-                &s,
+                &UTILS_STATE,
                 &Default::default(),
                 &Default::default(),
             )["qty_1"],
