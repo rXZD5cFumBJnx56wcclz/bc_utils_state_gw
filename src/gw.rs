@@ -1,11 +1,8 @@
 use bc_utils::other::procedure_used;
 use bc_utils_lg::{
     structs::{
-        settings::{SETTINGS_UTIL_STATE, SETTINGS_UTILS_STATE},
-        signals::Signal,
-        trade::TradeState,
-    },
-    types::maps::{MAP, PACK},
+        settings::{SETTINGS_TRADE, SETTINGS_UTIL_STATE, SETTINGS_UTILS_STATE}, signals::Signal, trade::TradeState,
+    }, types::maps::{MAP, PACK},
 };
 use bc_utils_state::main_trait::UtilState;
 
@@ -40,7 +37,7 @@ impl<'a> UtilsState<'a> {
         &mut self,
         s: &'a SETTINGS_UTILS_STATE,
         fa: &PACK<SETTINGS_UTIL_STATE, Box<dyn UtilState>>,
-    )  {
+    ) {
         *self = Self(get_map(s, fa))
     }
 }
@@ -50,6 +47,7 @@ impl<'a> UtilsState<'a> {
         &self,
         state: &TradeState,
         buffer: &[Vec<f64>],
+        s_trade: &SETTINGS_TRADE,
         s: &'a SETTINGS_UTILS_STATE,
         indications: &MAP<&str, f64>,
         signals: &MAP<&str, Signal>,
@@ -67,6 +65,7 @@ impl<'a> UtilsState<'a> {
                             .map(|v| signals[v.as_str()])
                             .collect::<Vec<Signal>>()
                             .as_slice(),
+                        s_trade,
                     ),
                 )
             })
@@ -77,22 +76,23 @@ impl<'a> UtilsState<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bc_test_kit::prelude::*;
     use bc_packs::PACK_UTIL;
+    use bc_test_kit::prelude::*;
 
     #[test]
     fn series_res_1() {
         let mut utils = UtilsState::default();
         utils.init(&UTILS_STATE, &PACK_UTIL);
         assert_eq_pr!(
-            utils.series(
+            &utils.series(
                 &TradeState::new(100.,),
                 &[],
-                &UTILS_STATE,
+                &TRADE,
+                &*UTILS_STATE,
                 &Default::default(),
                 &Default::default(),
-            )["qty_1"],
-            11.,
+            ),
+            &*UTILS_STATE_STATE,
         );
     }
 }
