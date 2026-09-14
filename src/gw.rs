@@ -1,8 +1,11 @@
+use bc_trade_state::prelude::*;
 use bc_utils::other::procedure_used;
 use bc_utils_lg::{
     structs::{
-        settings::{SETTINGS_TRADE, SETTINGS_UTIL_STATE, SETTINGS_UTILS_STATE}, signals::Signal, trade::TradeState,
-    }, types::maps::{MAP, PACK},
+        settings::{SETTINGS_TRADE, SETTINGS_UTIL_STATE, SETTINGS_UTILS_STATE},
+        signals::Signal,
+    },
+    types::maps::{MAP, PACK},
 };
 use bc_utils_state::main_trait::UtilState;
 
@@ -85,7 +88,7 @@ mod tests {
         utils.init(&UTILS_STATE, &PACK_UTIL);
         assert_eq_pr!(
             &utils.series(
-                &TradeState::new(100.,),
+                &TradeState::new(Capital(100.),),
                 &[],
                 &TRADE,
                 &*UTILS_STATE,
