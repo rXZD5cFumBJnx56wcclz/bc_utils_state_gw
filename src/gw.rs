@@ -1,12 +1,5 @@
-use bc_trade_state::prelude::*;
 use bc_utils::other::procedure_used;
-use bc_utils_lg::{
-    structs::{
-        settings::{SETTINGS_TRADE, SETTINGS_UTIL_STATE, SETTINGS_UTILS_STATE},
-        signals::Signal,
-    },
-    types::maps::{MAP, PACK},
-};
+use bc_utils_lg::prelude::*;
 use bc_utils_state::main_trait::UtilState;
 
 pub fn get_map<'a>(
@@ -79,8 +72,10 @@ impl<'a> UtilsState<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_state::*;
     use bc_packs::PACK_UTIL;
     use bc_test_kit::prelude::*;
+    use bc_utils_lg::test_state::prelude::*;
 
     #[test]
     fn series_res_1() {
