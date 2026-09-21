@@ -1,11 +1,11 @@
 [package]
 name = "bc_utils_state_gw"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2024"
 
 [dependencies]
 bc_utils_lg = {path = "../bc_utils_lg", features = ["test_state"]}
-bc_utils = {path = "../bc_utils"}
+bc_gw_utils = {path = "../bc_gw_utils"}
 bc_utils_state = {path = "../bc_utils_state"}
 
 [dev-dependencies]
